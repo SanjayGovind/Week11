@@ -1,11 +1,4 @@
-package package1;
-
-//public class patentCount {
-//
-//}
-//package com.nearinfinity.hadoop.patent;
-
-import java.io.IOException;
+<200b>import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -21,14 +14,15 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-public class patentCount extends Configured implements Tool {
+public class FindCitingPatentsCount extends Configured implements Tool {
 
     public static enum Counters {
-        TOTAL_COUNT,
-        PATENT_COUNT
+        TOTAL_CITATIONS,
+        TOTAL_PATENTS
     }
 
-   
+    // Map inputs: (citing patent, cited patent)
+    // Map outputs: (cited patent, citing patent)
     public static class MapClass extends Mapper<LongWritable, Text, Text, Text> {
 
         private Text citing = new Text();
@@ -43,11 +37,12 @@ public class patentCount extends Configured implements Tool {
             cited.set(split[1]);
 
             context.write(cited, citing);
-            context.getCounter(Counters.TOTAL_COUNT).increment(1L);
+            context.getCounter(Counters.TOTAL_CITATIONS).increment(1L);
         }
     }
 
-  
+    // Reduce inputs: (cited patent, list(citing patent))
+    // Reduce outputs: (cited patent, count of citing patents)
     public static class Reduce extends Reducer<Text, Text, Text, IntWritable> {
 
         private IntWritable citingCount = new IntWritable();
@@ -64,7 +59,7 @@ public class patentCount extends Configured implements Tool {
 
             citingCount.set(count);
             context.write(key, citingCount);
-            context.getCounter(Counters.PATENT_COUNT).increment(1L);
+            context.getCounter(Counters.TOTAL_PATENTS).increment(1L);
         }
     }
 
